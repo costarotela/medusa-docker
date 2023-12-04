@@ -22,17 +22,22 @@ services:
       NODE_ENV: development
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/medusa-docker
       REDIS_URL: redis://cache
+      SOLR_URL: http://solr:8983/solr/medusa
+      JWT_SECRET: CHANGEME123
+      COOKIE_SECRET: CHANGEME123
       MINIO_ENDPOINT: http://minio:9000
       MINIO_BUCKET: medusa-bucket
       MINIO_ACCESS_KEY: 7nR9aSt9LR32Py3o
       MINIO_SECRET_KEY: ath8oTjP2rLdhY08EwLMUZksvWwhPyGv
+      ADMIN_CORS: http://medusa_admin:7000,http://localhost:7001,http://localhost:7000,http://localhost:7000
+      STORE_CORS: http://localhost:3000,http://localhost:8000,http://storefront:8000
     
   postgres:
     image: postgres:10.4-alpine
     restart: always
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 5s
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres -h 127.0.0.1 -p 5432"]
+      interval: 10s
       timeout: 5s
       retries: 5
     expose:
@@ -52,6 +57,16 @@ services:
       - 6379
     volumes:
       - redis_data:/data
+    environment:
+      - REDIS_URL=redis://cache
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_BIND_ADDRESS=0.0.0.0
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     
   minio:
     image: quay.io/minio/minio
